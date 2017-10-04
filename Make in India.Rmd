@@ -1,0 +1,551 @@
+---
+title: "Make in India"
+Author: "Hitesh Palamada"
+date: "14 August 2017"
+output: html_document
+---
+
+<center><img src="http://www.motorindiaonline.in/wp-content/uploads/2016/03/make-in-india-logo.jpg"></center>
+
+**This is an exploratory analysis of the Import and Export by India from 2014 to 2017 dataset, which can be found** [here](https://www.kaggle.com/rajanand/import-and-export-by-india). 
+
+In this script we'd be look at following things
+
+* [1.Import data](#Importdata)
+* [2.Feature Engineering](#FeatureEngineering)
+* [3.Year wise top 10 countries by value of Import - table view, pie chart](#)
+* [4.Year wise top 10 countries by value of EXport - table view, pie chart](#)
+* [5.Visualizing the Import Products by categories - pallet pattern chart](#)
+* [6.Visualizing the Export Products by categories - pallet pattern chart](#)
+* [7.Visualizing the Import Products by top countries - pallet pattern chart](#)
+* [8.Visualizing the Export Products by top countries - pallet pattern chart](#)
+
+
+```{r, message=FALSE, warning=FALSE}
+# Importing Library
+library(readr)
+library(data.table)
+library(dplyr)
+library("knitr")
+library(plotly)
+library(treemap)
+
+```
+
+##Import data{#Importdata}
+```{r, message=FALSE, warning=FALSE}
+
+import_2014 <- read.csv("../input/PC_Import_2014_2015.csv")
+import_2015 <- read.csv("../input/PC_Import_2015_2016.csv")
+import_2016 <- read.csv("../input/PC_Import_2016_2017.csv")
+export_2014 <- read.csv("../input/PC_Export_2014_2015.csv")
+export_2015 <- read.csv("../input/PC_Export_2015_2016.csv")
+export_2016 <- read.csv("../input/PC_Export_2016_2017.csv")
+```
+Feature Engineering
+
+```{r, message=FALSE, warning=FALSE}
+
+#Adding year column to each dataset
+import_2014$year <- 2014
+import_2015$year <- 2015
+import_2016$year <- 2016
+export_2014$year <- 2014
+export_2015$year <- 2015
+export_2016$year <- 2016
+
+# merging every (2014-2016) year dataframes into one.
+
+import <- rbind(import_2014,import_2015,import_2016)
+export <- rbind(export_2014,export_2015,export_2016)
+
+```
+Lets look into to data set
+
+```{r, message=FALSE, warning=FALSE}
+dim(import)
+names(import)
+head(import)
+
+dim(export)
+names(export)
+head(export)
+
+```
+#Categorizing products into Commodity  type to have a over view of Exports and Imports.
+```{r, message=FALSE, warning=FALSE}
+Agriculture_allied_products<- c("Tea","Coffee","Rice -Basmoti","Rice(Other Than Basmoti)","Wheat","Other Cereals","Pulses","Tobacco Unmanufactured","Tobacco Manufactured","Spices","Cashew","Cashew Nut Shell Liquid","Sesame Seeds","Niger Seeds","Groundnut","Other Oil Seeds","Vegetable Oils","Oil Meals","Guergam Meal","Castor Oil","Shellac","Sugar","Mollases","Fruits / Vegetable Seeds","Fresh Fruits","Fresh Vegetables","Processed Vegetables","Processed Fruits And Juices","Cereal,Preparations","Cocoa Products","Milled Products","Misc Processed Items","Animal Casings","Buffalo Meat","Sheep/Goat Meat","Other Meat","Processed Meat","Dairy Products","Poultry Products","Floricltr Products","Natural Rubber","Alcoholic Beverages","Marine Products", "Cereal Preparations")
+Chemical_Industry <- c("Fertilezers Crude","Fertilezers Manufactured","Ayush And Herbal Products","Bulk Drugs, Drug Intermediates","Dye Intermediates","Dyes","Drug Formulations, Biologicals","Agro Chemicals","Inorganic Chemicals","Organic Chemicals","Other Miscellaenious Chemicals","Cosmetics And Toiletries","Essential Oils","Residul Chemicl And Alled Prod","Paint, Varnish And Allid Prodc","Graphite, Explsivs And Accesor","Cmnt, Clinkr And Asbstos Cmnt","Ceramics And Allied Products","Manmade Staple Fibre")
+gems_and_jewelry<- c("Pearl, Precs, Semiprecs Stones","Gold","Silver","Other Precious And Base Metals","Gold And Oth Precs Metl Jwlery")
+Leather<- c("Raw Hides And Skins","Finished Leather","Leather Goods","Leather Garments","Footwear Of Leather","Leather Footwear Component", "Saddlery And Harness")
+Manifacutred_goods <- c("Sports Goods","Surgicals","Footwear Of Rubber/Canvas Etc.","Auto Components/Parts","Electrodes","Accumulators And Batteries","Hnd Tool, Cttng Tool Of Metals","Machine,Tools","Medical And Scientific Instrum","Office Equipments","Ac, Refrigeration Machnry Etc","Bicycle And Parts","Cranes, Lifts And Winches","Electric Machinery And Equipme","Ic Engines And Parts","Indl. Machnry For Dairy Etc","Atm, Injctng Mlding Mchnry Etc","Nucler Reactr, Indl Boilr, Prt","Other Construction Machinery","Other Misc. Engineering Items","Prime Mica And Mica Products","Pumps Of All Types","Aircraft, Spacecraft And Parts","Motor Vehicle/Cars","Railwy Trnsprt Equipmnts, Prts","Ship, Boat And Floating Struct","Two And Three Wheelers","Computer Hardware, Peripherals","Consumer Electronics","Electronics Components","Electronics Instruments","Telecom Instruments","Project Goods", "Machine Tools")
+Ores_and_minerals <- c("Iron Ore","Mica","Coal,Coke And Briquittes Etc","Bulk Minerals And Ores","Granit, Natrl Stone And Prodct","Processed Minerals","Sulpher, Unroasted Iron Pyrite","Other Crude Minerals","Iron And Steel","Products Of Iron And Steel","Aluminium, Products Of Aluminm","Copper And Prdcts Made Of Copr","Lead And Products Made Of Led","Nickel, Product Made Of Nickel","Tin And Products Made Of Tin","Zinc And Products Made Of Zinc","Oth Non Ferous Metal And Prodc","Petroleum Products", "Petroleum: Crude" )
+plastics_and_paper <- c("Glass And Glassware","Books, Publications And Prntng","Newsprint","Paper, Paper Board And Product","Plywood And Allied Products","Other Wood And Wood Products","Pulp,And Waste Paper","Optical Items (Incl.Lens Etc)","Human Hair, Products Thereo","Moulded And Extruded Goods","Packaging Materials","Plastic Raw Materials","Plastc Sht, Film, Plts Etc","Stationry/Offce, School Supply","Other Plastic Items", "Pulp And Waste Paper")
+Rubber<- c("Auto Tyres And Tubes","Othr Rubber Prodct Excpt Footw")
+Textile<- c("Cotton Yarn","Cotton Fabrics, Madeups Etc.","Oth Txtl Yrn, Fbric Mdup Artcl","Silk,Raw","Natrl Silk Yarn,Fabrics,Madeup","Manmade Yarn,Fabrics,Madeups","Wool, Raw","Wollen Yarn,Fabrics,Madeupsetc","Rmg Cotton Incl Accessories","Rmg Silk","Rmg Manmade Fibres","Rmg Wool","Rmg Of Othr Textle Matrl","Coir And Coir Manufactures","Handloom Products","Silk Waste","Jute, Raw","Jute Yarn","Jute Hessian","Floor Cvrng Of Jute","Other Jute Manufactures","Handcrfs(Excl.Handmade Crpts)","Carpet(Excl. Silk) Handmade","Silk Carpet","Cotton Raw Incld. Waste")
+OtherCommodities<-c ("Other Commodities")
+
+#Adding Commodity  type column to data set
+
+import$Commodity_type[import$pc_description %in% Agriculture_allied_products] <- "Agriculture_allied_products"
+import$Commodity_type[import$pc_description %in% Chemical_Industry] <- "Chemical_Industry"
+import$Commodity_type[import$pc_description %in% gems_and_jewelry] <- "gems_and_jewelry"
+import$Commodity_type[import$pc_description %in% Leather] <- "Leather"
+import$Commodity_type[import$pc_description %in% Manifacutred_goods] <- "Manifacutred_goods"
+import$Commodity_type[import$pc_description %in% Ores_and_minerals] <- "Ores_and_minerals"
+import$Commodity_type[import$pc_description %in% plastics_and_paper] <- "plastics_and_paper"
+import$Commodity_type[import$pc_description %in% Rubber] <- "Rubber"
+import$Commodity_type[import$pc_description %in% Textile] <- "Textile"
+import$Commodity_type[import$pc_description %in% OtherCommodities] <- "OtherCommodities"
+
+
+export$Commodity_type[export$pc_description %in% Agriculture_allied_products] <- "Agriculture_allied_products"
+export$Commodity_type[export$pc_description %in% Chemical_Industry] <- "Chemical_Industry"
+export$Commodity_type[export$pc_description %in% gems_and_jewelry] <- "gems_and_jewelry"
+export$Commodity_type[export$pc_description %in% Leather] <- "Leather"
+export$Commodity_type[export$pc_description %in% Manifacutred_goods] <- "Manifacutred_goods"
+export$Commodity_type[export$pc_description %in% Ores_and_minerals] <- "Ores_and_minerals"
+export$Commodity_type[export$pc_description %in% plastics_and_paper] <- "plastics_and_paper"
+export$Commodity_type[export$pc_description %in% Rubber] <- "Rubber"
+export$Commodity_type[export$pc_description %in% Textile] <- "Textile"
+export$Commodity_type[export$pc_description %in% OtherCommodities] <- "OtherCommodities" 
+```
+
+
+
+Lets lookin at Commodity_type level, Made a list of Continent_contries.
+
+```{r, message=FALSE, warning=FALSE}
+
+Top_imports <- import %>%
+  group_by(country_name,year)  %>%
+  summarise(total_import_value = sum(value))  %>%
+  arrange(desc(total_import_value))
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+Top_exports <- export %>%
+  group_by(country_name,year)  %>%
+  summarise(total_export_value = sum(value))  %>%
+  arrange(desc(total_export_value))
+
+```
+
+
+```{r include=FALSE}
+options(tibble.width = Inf)
+
+```
+
+###Lets see Year wise top 10 countries by value of Import - table view, pie chart{.tabset}
+
+#### 2014
+
+```{r, result='asis', echo=FALSE}
+temp <-Top_imports %>%
+  filter(year== 2014)%>%
+  select(country_name, total_import_value)%>%
+  head(n=10) 
+
+kable(temp)  
+  
+colors <- c('rgb(211,94,96)', 'rgb(128,133,133)', 'rgb(144,103,167)', 'rgb(171,104,87)', 'rgb(114,147,203)')
+
+plot_ly(temp, labels = ~country_name, values = ~total_import_value, type = 'pie' ,
+    textposition = 'inside',
+    textinfo = 'label+percent',
+    insidetextfont = list(color = '#FFFFFF'),
+    hoverinfo = 'text',
+    text = ~paste('$', total_import_value, ' billions'),
+    marker = list(colors = colors,
+              line = list(color = '#FFFFFF', width = 1)),
+#The 'pull' attribute can also be used to create space between the sectors
+showlegend = FALSE) %>%
+  
+  layout(title = 'India Import pie chat for 2014',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+# Note Percentage shown in pie chart are the percentage share among top 10 countries
+
+```
+
+
+#### 2015
+
+```{r, result='asis', echo=FALSE}
+temp <-Top_imports %>%
+  filter(year== 2015)%>%
+  select(country_name, total_import_value)%>%
+  head(n=10) 
+
+kable(temp)  
+  
+
+plot_ly(temp, labels = ~country_name, values = ~total_import_value, type = 'pie' ,
+    textposition = 'inside',
+    textinfo = 'label+percent',
+    insidetextfont = list(color = '#FFFFFF'),
+    hoverinfo = 'text',
+    text = ~paste('$', total_import_value, ' billions'),
+    marker = list(colors = colors,
+              line = list(color = '#FFFFFF', width = 1)),
+#The 'pull' attribute can also be used to create space between the sectors
+showlegend = FALSE) %>%
+  
+  layout(title = 'India Import pie chat for 2015',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+# Note Percentage shown in pie chart are the percentage share among top 10 countries
+
+```
+
+
+#### 2016
+
+```{r, result='asis', echo=FALSE}
+temp <-Top_imports %>%
+  filter(year== 2016)%>%
+  select(country_name, total_import_value)%>%
+  head(n=10) 
+
+kable(temp)  
+  
+
+plot_ly(temp, labels = ~country_name, values = ~total_import_value, type = 'pie' ,
+    textposition = 'inside',
+    textinfo = 'label+percent',
+    insidetextfont = list(color = '#FFFFFF'),
+    hoverinfo = 'text',
+    text = ~paste('$', total_import_value, ' billions'),
+    marker = list(colors = colors,
+              line = list(color = '#FFFFFF', width = 1)),
+#The 'pull' attribute can also be used to create space between the sectors
+showlegend = FALSE) %>%
+  
+  layout(title = 'India Import pie chat for 2016',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  
+```
+
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# Note Percentage shown in pie chart are the percentage share among top 10 countries
+
+```
+
+
+```{r include=FALSE}
+options(tibble.width = Inf)
+
+```
+
+
+###Lets see Year wise top 10 countries by value of EXport - table view, pie chart{.tabset}
+
+#### 2014
+
+```{r, result='asis', echo=FALSE}
+
+temp <-Top_exports %>%
+  filter(year== 2014)%>%
+  select(country_name, total_export_value)%>%
+  head(n=10) 
+
+kable(temp)  
+  
+colors <- c('rgb(211,94,96)', 'rgb(128,133,133)', 'rgb(144,103,167)', 'rgb(171,104,87)', 'rgb(114,147,203)')
+
+plot_ly(temp, labels = ~country_name, values = ~total_export_value, type = 'pie' ,
+    textposition = 'inside',
+    textinfo = 'label+percent',
+    insidetextfont = list(color = '#FFFFFF'),
+    hoverinfo = 'text',
+    text = ~paste('$', total_export_value, ' billions'),
+    marker = list(colors = colors,
+              line = list(color = '#FFFFFF', width = 1)),
+#The 'pull' attribute can also be used to create space between the sectors
+showlegend = FALSE) %>%
+  
+  layout(title = 'India Import pie chat for 2014',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# Note Percentage shown in pie chart are the percentage share among top 10 countries
+
+```
+
+
+#### 2015
+
+```{r, result='asis', echo=FALSE}
+temp <-Top_exports %>%
+  filter(year== 2015)%>%
+  select(country_name, total_export_value)%>%
+  head(n=10) 
+
+kable(temp)  
+  
+
+plot_ly(temp, labels = ~country_name, values = ~total_export_value, type = 'pie' ,
+    textposition = 'inside',
+    textinfo = 'label+percent',
+    insidetextfont = list(color = '#FFFFFF'),
+    hoverinfo = 'text',
+    text = ~paste('$', total_export_value, ' billions'),
+    marker = list(colors = colors,
+              line = list(color = '#FFFFFF', width = 1)),
+#The 'pull' attribute can also be used to create space between the sectors
+showlegend = FALSE) %>%
+  
+  layout(title = 'India Import pie chat for 2015',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+# Note Percentage shown in pie chart are the percentage share among top 10 countries
+
+```
+
+
+#### 2016
+
+```{r, result='asis', echo=FALSE}
+temp <-Top_exports %>%
+  filter(year== 2016)%>%
+  select(country_name, total_export_value)%>%
+  head(n=10) 
+
+kable(temp)  
+  
+
+plot_ly(temp, labels = ~country_name, values = ~total_export_value, type = 'pie' ,
+    textposition = 'inside',
+    textinfo = 'label+percent',
+    insidetextfont = list(color = '#FFFFFF'),
+    hoverinfo = 'text',
+    text = ~paste('$', total_export_value, ' billions'),
+    marker = list(colors = colors,
+              line = list(color = '#FFFFFF', width = 1)),
+#The 'pull' attribute can also be used to create space between the sectors
+showlegend = FALSE) %>%
+  
+  layout(title = 'India Import pie chat for 2016',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  
+```
+
+
+```{r}
+
+# Note Percentage shown in pie chart are the percentage share among top 10 countries
+
+```
+
+#Visualizing the Import Products by categories - pallet pattern chart 
+Here is use to treemap package to visualize the products imported with Commodity type.
+
+```{r, message=FALSE, warning=FALSE}
+
+import_product <- import %>%
+  select(Commodity_type, pc_description, value)%>%
+  group_by(pc_description,Commodity_type )  %>%
+  summarise(total = sum(value))  %>%
+  arrange(desc(total))
+
+import_product <- import_product %>%
+   filter(total>400)
+
+treemap(import_product,index=c("Commodity_type","pc_description"),
+        vSize="total",
+        title="",
+        palette="Set3",
+        border.col="#FFFFFF")  
+
+```
+
+#### It is a belief that a country with maxmimun exports then imports is performing well economically,
+
+#### And again it doen't make sense to make everthing on your own .If you trade with other countries that have a compartive advantage.
+
+#### Oh, confusing right!! Easy, Top imports are Ores and minerals then comes manufactured goods.
+
+#### Within Ores and minerals, petroleum and petroleum products are big share. To strengthen indian economy
+
+#### taxes on this product are high, which limits people to use them more, demand gets down, so as import can be reduced.
+
+#### And then next major category is manufactured goods, MAKE IN INDIA is a solution.
+#### When goods are manufaced in indian reduces imports, creats employment opportunity which boosts economy.
+
+
+
+#Visualizing the Export Products by categories - pallet pattern chart 
+Here is use to treemap package to visualize the products imported with Commodity type.
+
+```{r, message=FALSE, warning=FALSE}
+
+export_product <- export %>%
+  select(Commodity_type, pc_description, value)%>%
+  group_by(pc_description,Commodity_type )  %>%
+  summarise(total = sum(value))  %>%
+  arrange(desc(total))
+
+export_product <- export_product %>%
+   filter(total>400)  
+  
+treemap(export_product,index=c("Commodity_type","pc_description"),
+        vSize="total",
+        title="",
+        palette="Set3",
+        border.col="#FFFFFF")  
+
+```
+
+
+
+#Visualizing the Import Products by top countries - pallet pattern chart
+
+```{r, message=FALSE, warning=FALSE}
+
+country <- import %>%
+  select(country_name,Commodity_type, pc_description, value)%>%
+  filter(country_name == c('China P Rp','U S A','U Arab Emts','Saudi Arab','Switzerland','Indonesia','Korea Rp','Iraq','Germany','Australia','Nigeria','Qatar'))%>%
+  group_by(Commodity_type, country_name)  %>%
+  summarise(total = sum(value))  %>%
+  arrange(desc(total))
+
+country <- country %>%
+   filter(total>400)
+
+treemap(country,index=c("country_name","Commodity_type"),
+        vSize="total",
+        title="",
+        palette="Set3",
+        border.col="#FFFFFF")
+
+```
+
+
+#Visualizing the Export Products by top countr - pallet pattern chart
+
+```{r, message=FALSE, warning=FALSE}
+
+country <- export %>%
+  select(country_name,Commodity_type, pc_description, value)%>%
+  filter(country_name == c('U S A','U Arab Emts','Hong Kong','China P Rp','Singapore','U K','Germany','Vietnam Soc Rep','Bangladesh Pr','Belgium','Saudi Arab','Sri Lanka Dsr'))%>%
+  group_by(Commodity_type, country_name)  %>%
+  summarise(total = sum(value))  %>%
+  arrange(desc(total))
+
+country <- country %>%
+   filter(total>400)
+
+treemap(country,index=c("country_name","Commodity_type"),
+        vSize="total",
+        title="",
+        palette="Set3",
+        border.col="#FFFFFF")
+
+```
+
+##Net Exports
+
+Net exports are the difference between a country's total value of exports and total value of imports. Depending on whether a country imports more goods or exports more goods, net exports can be a positive or negative value.
+
+
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+
+
+import_total <- import  %>%
+  group_by(year) %>% 
+  summarise(value = sum(value))
+
+import_total$type<- "imports" # for reference
+
+export_total <- export  %>%
+  group_by(year) %>% 
+  summarise(value1 = sum(value))
+
+export_total$type <- "exprots"  # for reference
+
+temp2 <-cbind(import_total, export_total)
+
+temp2$value3 <- temp2$value1 - temp2$value  # Net_ export value
+
+temp2<-temp2[-c(2:6)]
+colnames(temp2)[2] <- "value" #to make column name unique for 3 tables
+
+temp2$type<- "Net_exports"  # for reference
+
+colnames(export_total)[2] <- "value" #to make column name unique for 3 tables
+import_total
+export_total
+temp2
+
+temp1 <-rbind(import_total, export_total, temp2 )
+
+```
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library('ggplot2')
+
+temp1 %>%
+  ggplot(aes(year, value, color = type)) +
+  geom_line(size = 1.5) +
+  labs(x = "year", y = "value in Million USD")+
+  geom_abline(x=0, colour = "black") 
+
+```
+
+
+From graph it show that Net Export are in negative, which means India Imports more then its Exports. 
+And Net Export value are getting positive every year form 2014-2016.
+
+
+
+### **Summary and a bit Economics**
+
+####1. Most imports are from china and we import manufactured goods, why cant we make them here?
+####2. Most exports are to USA and U ArabEmts. Manufactured goods, Textile, Chemical industry are max exports, Lets focused to produce more and exports this products with best cost.
+####3. Most imported products - petroleum and petroleum products, Something every Indian has to think. Why to get your 4-wheeler out when you are travelling alone, if its short distance travel, have bi-cycle ride or go by walk, it's good for you health
+####4. If we can make anything cost effectively, without harming environment better make them in India.
+####5. And Gold, Indian Women’s are most beautiful, why to buy gold. IF you are lookin for investment buy E- Gold.
+
+
+#### When every i hear about Exports and imports, **farmville game** comes to my mind.
+
+####**Make/Grow/Produce things in you land and consume, sell excess to make money.**
+ 
+ 
+<center><img src="http://www.mentalmasturbasyon.com/wp-content/uploads/2010/01/farmville.jpg"></center>
+
+
+
+###That's all for now. Thanks for reading. If you have any feedback, I'd love to hear! I appreciate all the feedback .
+###Please like the kernel. Your likes are my motivation. ;)
+

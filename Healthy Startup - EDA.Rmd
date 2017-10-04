@@ -1,0 +1,372 @@
+---
+title: "Healthy startups"
+author: "Hitesh Palamada"
+date: "19 Sept 2017"
+output:
+  html_document:
+    number_sections: TRUE
+    toc: TRUE
+    fig_height: 4
+    fig_width: 7
+    code_folding: show
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+
+```
+
+#Introduction 
+
+This is an exploratory analysis of the  Indian Startup Funding  , which can be
+found [here](https://www.kaggle.com/sudalairajkumar/indian-startup-funding).
+
+                                                                             
+                                                                             
+                                                                             
+**Upvote the kernel, if you like.**
+
+
+
+#Import library, data set and bird eye view on dataset.
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(data.table)
+library(DT)
+
+startup <- read_csv("../input/startup_funding.csv")
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+dim(startup)
+
+datatable(startup, style="bootstrap", class="table-condensed", options = list(dom = 'tp',scrollX = TRUE))
+
+``` 
+
+
+#Changing Date
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+startup$date <- as.POSIXct(strptime(startup$Date, format = "%d/%m/%Y"))
+startup$day <- as.integer(format(startup$date, "%d")) # day
+startup$month <- as.factor(format(startup$date, "%m")) # month
+startup$year <- as.integer(format(startup$date, "%y")) # day
+startup$monthyear <- paste(startup$year,startup$month,sep="_")# year month
+
+``` 
+
+#Start-up Funding between 2015-2017 August.
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+startup %>%
+    group_by(monthyear)%>%
+    summarise(n = n())%>%
+    drop_na(monthyear)%>%
+    ggplot(aes(x =monthyear, y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red"))+
+    labs(x = 'Year_ month', y = 'Number of Startups Funded', title = 'Year-Month wise Startups Funding') +
+    theme(axis.text.x=element_text(angle=45,hjust=1,vjust=0.5))
+
+
+``` 
+
+Seems like between mid 2015 to mid 2016 has more number of fundings compared to other months and has been marginally declining in the recent days.
+
+
+**Startup India campaign** is based on an action plan aimed at promoting bank financing for start-up ventures to boost entrepreneurship and encourage start ups with jobs creation. The campaign was first announced by Prime Minister on 15 August 2015, This made many new startup registration and funding, Later in mid 2016 some newbie companies couldn't show case good expected profits which lost confidence among investors.
+
+
+#Industry vertical categories
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+temp<-startup %>%
+    group_by(IndustryVertical)%>%
+    summarise(n = n()) %>%
+    drop_na(IndustryVertical)%>%
+    arrange(desc(n)) %>%
+    head(n = 9)
+
+temp %>%
+    ggplot(aes(x = reorder(IndustryVertical , n) , y = n)) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) +
+    labs(x = 'Industry Verticals', y = 'Number of Startups Funded', title = 'Industry Verticals wise Startups Funding') +
+    coord_flip() + 
+    theme_bw()
+
+```
+
+**Consumer Internet** is the most preferred industry segment for **funding followed by Technology and E-commerce.**
+
+#Prefered CityLocation for startups categories
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+
+temp <-startup %>%
+    group_by(CityLocation)%>%
+    summarise(n = n())%>%
+    drop_na(CityLocation)%>%
+    arrange(desc(n)) %>%
+    head(n = 10)
+    
+temp %>%    
+    ggplot(aes(x =reorder(CityLocation,n), y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) +
+    labs(x = 'City', y = 'Number of Startups Funded', title = 'City wise Startups Funding') +
+    coord_flip() + 
+    theme_bw()
+    
+```
+
+**Bangalore** seems to attract lot of investments followed by **Mumbai and Delhi.**
+
+#Inversters type categories
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+temp<- startup %>%
+    group_by(InvestmentType)%>%
+    summarise(n = n())%>%
+    arrange(desc(n)) %>%
+    head(n = 10)
+    
+temp %>%      
+    ggplot(aes(x = reorder(InvestmentType,n) , y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) +
+    labs(x = 'Investment Type', y = 'Number of Startups Funded', title = 'Investment Type wise Startups Funding') +
+    coord_flip() + 
+    theme_bw()
+
+```
+
+**Seed funding** tops the chart followed by **Private Equity.**
+
+
+
+#Which start-up is funded more
+
+I have observed single startup name taken in differen ways such as oyo rooms as oyo and oyorooms, at times with .com , .in as suffix
+Lets change the names accordingly
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+# Removing .com, .in, .co
+startup$StartupName <- sapply(strsplit(startup$StartupName, split='.com', fixed=TRUE), function(x) (x[1]))
+startup$StartupName <- sapply(strsplit(startup$StartupName, split='.in', fixed=TRUE), function(x) (x[1]))
+startup$StartupName <- sapply(strsplit(startup$StartupName, split='.co', fixed=TRUE), function(x) (x[1]))
+startup$StartupName <- tolower(startup$StartupName)
+
+
+startup$StartupName[startup$StartupName == "olacabs"] <- "ola"
+startup$StartupName[startup$StartupName == "oyo"] <- "oyo rooms"
+startup$StartupName[startup$StartupName == "oyorooms"] <- "oyo rooms"
+
+
+temp<- startup %>%
+    group_by(StartupName)%>%
+    summarise(n = sum(AmountInUSD))%>%
+    arrange(desc(n)) %>%
+    head(n = 10)
+
+temp %>%      
+    ggplot(aes(x = reorder(StartupName,n) , y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) +
+    labs(x = 'Startup Company', y = 'Amount Funded in USD', title = 'Company wise Amount Funded(USD)  ') +
+    coord_flip() + 
+    theme_bw()
+    
+```
+
+**Flipkart followed by Ola snapdeal are most Funded Startups**
+
+#Which start-up is funded again and again
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+temp<- startup %>%
+    group_by(StartupName)%>%
+    summarise(n = n())%>%
+    arrange(desc(n)) %>%
+    head(n = 10)
+    
+head(temp,10)
+    
+temp %>%      
+    ggplot(aes(x = reorder(StartupName,n) , y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) +
+    labs(x = 'Startup Company', y = 'Number of times Amount Funded', title = 'Company wise Number of times Amount Funded ') +
+    coord_flip() + 
+    theme_bw()
+
+```
+
+**Swiggy, urbanclap, Oyo room** are fundded multiple times followed by **medinfi, lenskart.**
+
+
+#Subvertical word cloud 
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+makeWordCloud <- function(documents) {
+  corpus = Corpus(VectorSource(tolower(documents)))
+  corpus = tm_map(corpus, removePunctuation)
+  corpus = tm_map(corpus, removeWords, stopwords("english"))
+  
+  frequencies = DocumentTermMatrix(corpus)
+  word_frequencies = as.data.frame(as.matrix(frequencies))
+  
+  words <- colnames(word_frequencies)
+  freq <- colSums(word_frequencies)
+  wordcloud(words, freq,
+            min.freq=sort(freq, decreasing=TRUE)[[100]],
+            colors=brewer.pal(8, "Dark2"),
+            random.color=TRUE) 
+}  
+
+
+makeWordCloud(startup[["SubVertical"]][1:50])
+
+```
+
+Investers are more  intrested to invest on **Platform, Marketplace,  Online, Solutions** Subverticals.  
+
+
+#Prefered city  X IndustryVertical treemap
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+library(treemap)
+
+
+startup1 <-startup %>%
+    select(CityLocation, IndustryVertical) %>%
+    group_by(CityLocation, IndustryVertical) %>%
+    summarise(n = n())%>%
+    filter(n>5)
+
+treemap(startup1 , index=c( "CityLocation" , "IndustryVertical" ),
+        vSize="n",
+        title="",
+        palette="Set3",
+        border.col="#FFFFFF")  
+
+```
+
+Every city with Consumer Internet is the most preferred industry segment excet **Pune**, **Technology** is the **most preferred industry segment in Pune** .
+
+#Inverstors name column split 
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+library(splitstackshape)
+
+startup <- cSplit(startup, "InvestorsName", ",", 'long', drop = FALSE)
+
+head(startup)
+
+```
+
+
+
+#Inverstors name  X  IndustryVertical - Tree chart
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+temp<-startup %>%
+    group_by(InvestorsName)%>%
+    summarise(n = n())%>%
+    arrange(desc(n)) %>%
+    head(n = 10)
+
+temp %>%      
+    ggplot(aes(x = reorder(InvestorsName,n) , y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) +
+    labs(x = 'Investors', y = 'Number of Startups Funded', title = 'Number of Startups Funded by Investor') +
+    coord_flip() + 
+    theme_bw()
+
+```
+
+So **Sequoia capital** is the major investor in Indian startups (based on count) followed by **Accel partners, Kalaari capital and Saif partners.**
+
+#Top 10 Inverstors name  X Industry type - Tree chart
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+startup2 <-startup %>%
+    select( InvestorsName , IndustryVertical)%>%
+    group_by(InvestorsName ,IndustryVertical)%>%
+    summarise(n = n())%>%
+    filter(InvestorsName %in% c('Sequoia Capital' ,'Accel Partners','Kalaari Capital','Indian Angel Network','SAIF Partners','Blume Ventures','Undisclosed Investors', 'Ratan Tata','Undisclosed investors','Tiger Global'))%>%
+    filter(n>2)
+    
+
+treemap(startup2,index=c("InvestorsName","IndustryVertical"),
+        vSize="n",
+        title="",
+        palette="Set3",
+        border.col="#FFFFFF")  
+        
+
+```
+
+Mostly Top 10 Inverstors are intrested in Consumer Internet, Except **Kalaari Capital, Ratan Tata** who funded more on **Technology and E-commerce.**
+
+
+# Top 10 Inverstors name  X  Industry Vertical - Tree chart
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+startup3<-startup %>%
+    select( InvestorsName , InvestmentType)%>%
+    group_by(InvestorsName ,InvestmentType)%>%
+    summarise(n = n())%>%
+    filter(InvestorsName %in% c('Sequoia Capital' ,'Accel Partners','Kalaari Capital','Indian Angel Network','SAIF Partners','Blume Ventures','Undisclosed Investors', 'Ratan Tata','Undisclosed investors','Tiger Global'))
+    
+treemap(startup3,index=c("InvestorsName","InvestmentType"),
+        vSize="n",
+        title="",
+        palette="Set3",
+        border.col="#FFFFFF")  
+
+```
+
+Mostly Top 10 Inverstors are intrested in Private Equity type of investments, Where as  **Indian Angle Networks and Undisclosed Investors** invested on Seed Fundings
+
+
+**Thanks for reading. If you have any feedback, I'd love to hear! .**
+**Please like the kernel. Your likes are my motivation. ;) **
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

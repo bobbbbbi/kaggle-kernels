@@ -1,0 +1,581 @@
+---
+title: "Hello Foodiess!!"
+author: "Hitesh Palamada"
+date: "22 July 2017"
+output: html_document
+---
+
+<center><img src="https://image.shutterstock.com/z/stock-photo-group-of-people-dining-concept-520182778.jpg"></center>
+
+
+
+
+##Hello Foodies,
+
+
+
+##This kernal is an exploratory analysis of the KCBS Barbeque Competitions, which can be found [Click Here](https://www.kaggle.com/jaysobel/kcbs-bbq).
+ 
+ 
+ 
+#Introductions  
+
+**Kansas City Barbeque Society** is a competitive cooking organization founded in 1985 by Carolyn and Gary Wells and Rick Welch. Their desire was to put together a local group for competitive barbecue. It has since grown exponentially and provides oversight to hundreds of competitions. It is the largest competitive barbecue organization in the world, with more than 15,000 members.
+
+
+The Kansas City Barbeque Society is the official sanctioning body of competitive barbeque. Each year, KCBS sanctions more than 500 competitions across the country.
+Competitions are usually coordinated in conjunction with a local festival or event. Teams typically begin to arrive on a Friday morning and set up their equipment. Competitors will begin to cook on Friday evening and then throughout the night with a turn in for the various smoked meats some time in the early afternoon on Saturday.
+
+Events usually have a cash prize of varying amounts. Quite often these events draw crowds of spectators numbering in the thousands, and depending on the prize amount, they will draw competitors from several states.
+
+In 2011, KCBS partnered with Sam's Club to offer the largest and richest competition in barbeque history. The Inaugural Sam's Club National Barbecue Tour consists of 20 local qualifying events, five regional events and one national championship. Teams will be competing to win a piece of the $400,000 prize purse. 
+
+
+ 
+**In this script we'd be look at following things.**
+
+* [1.Import data](#Importdata)
+* [2.where do KCBS competitions happen more frequently](#competitionsfrequently)
+* [3.Money Money !!](#Money)
+* [4.Which team is Avg best score in - brisket, chicken, pork, ribs respectively](#Avgbestscore)
+* [5.What is teams best results scores - brisket, chicken, pork, ribs respectively](#bestresultsscores)
+* [6.When do competition happens](#Whendocompetitionhappens)
+* [7.Number of team participated  in contest.](#Numberofteam)
+* [8.Word Clould for team Names.](#WordClould)
+* [9.Summary](#Summary)
+
+
+```{r, message=FALSE, warning=FALSE}
+# Importing Library
+library(readr)
+library(data.table)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(knitr)
+library(DT)
+library(choroplethrMaps)
+library(maps)
+library(plotrix)
+library(RColorBrewer)
+
+```
+##Import data{#Importdata}
+
+```{r, message=FALSE, warning=FALSE}
+
+contest <- read_csv("../input/contest_data.csv")
+results_brisket <- read_csv("../input/results_brisket.csv")
+results_chicken <- read_csv("../input/results_chicken.csv")
+results_pork <- read_csv("../input/results_pork.csv")
+results_ribs <- read_csv("../input/results_ribs.csv")
+
+```
+
+
+##Is the competition a 'state championship' !!
+
+```{r, message=FALSE, warning=FALSE}
+
+#Group contest based on type of championship
+temp<-contest %>%
+    group_by(is_championship) %>% 
+    summarise(count=n())
+
+
+label <-  
+  c( paste(temp$is_championship[1],temp$count[1],sep=''),
+     paste(temp$is_championship[2],temp$count[2],sep=''))
+
+
+pie3D(temp$count,labels=label,labelcex=1.1,explode=0.5,col=c("dodgerblue4","mediumpurple3") )
+
+
+```
+
+
+##Is the competition a 'standard championship' !!
+If the competition consists of and only of the four categories: chicken, pork ribs, pork and brisket.- **Yes**
+If the competition include extra categories like dessert and these are considered - **No**
+
+
+```{r, message=FALSE, warning=FALSE}
+
+#Group contest based on type of standard
+temp<-contest %>%
+    group_by(is_standard) %>% 
+    summarise(count=n())
+
+
+label <-  
+  c( paste(temp$is_standard[1],temp$count[1],sep=''),
+     paste(temp$is_standard[2],temp$count[2],sep=''))
+
+pie3D(temp$count,labels=label,labelcex=1.1,explode=0.3,col=c("dodgerblue4","mediumpurple3") )
+
+
+```
+
+
+
+## where do KCBS competitions happen more fequently{#competitionsfrequently}
+
+```{r, message=FALSE, warning=FALSE}
+contest$state_full<-sapply(contest$state_full,tolower) # Changing State full name to lower case
+
+most_happening <- contest %>% 
+  group_by(state_full) %>% 
+  summarise(count=n()) %>%
+  arrange(desc(count))
+
+datatable(most_happening, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+
+
+```
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE }
+
+ggplot(most_happening, aes(x = reorder(state_full, count), y =  count )) +
+  geom_bar(stat='identity',colour="white", fill = c("red")) +
+  geom_text(aes(x = state_full, y = 1, label = paste0("(",count,")",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'state', y = 'competitions Count', title = 'State wise competitions Count' ) +
+  coord_flip() + 
+  theme_bw()
+
+
+```
+
+## Let's take a look of data in maps
+
+```{r, message=FALSE, warning=FALSE , echo = FALSE}
+
+# Creating columns "region" , "value"
+
+most_happening$region<-most_happening$state_full
+
+
+# As library choroplethr throws an error, this sprit in made not to excute 
+#most_happening$value <- most_happening$count
+#choro = StateChoropleth$new(most_happening)
+#choro$title = "Most KCBS competitions happening states"
+#choro$set_num_colors(1)
+#myPalette <- colorRampPalette(brewer.pal(9, "Reds"))
+#choro$ggplot_polygon = geom_polygon(aes(fill = value), color = NA)
+#choro$ggplot_scale = scale_fill_gradientn(name = "count", colours = myPalette(9))
+#choro$render()
+
+```
+
+
+```{r , message=FALSE, warning=FALSE, fig.align='center', echo = FALSE}
+
+library(RColorBrewer) # for colours gradent(visualization) 
+us.map  <- map_data('state')
+us.map$subregion <- NULL
+
+new <- inner_join(us.map , most_happening)
+
+g <- ggplot(new, aes(x=long, y=lat, group=group))
+g + geom_polygon(aes(fill=count)) + coord_map('gilbert') + ggtitle('State wise competitions')
+
+```
+
+With the name KCBS Compititions happens more in  **missouri, kansas states**.
+
+
+## Money Money !!{#Money}
+#What is the Average prize money a contestent win??
+
+```{r, message=FALSE, warning=FALSE}
+
+big_prize_money <- contest %>% 
+  group_by(state_full) %>% 
+  summarise(avg_prize= round(mean(prize, na.rm = TRUE) , digits=0)) %>% 
+  arrange(desc(avg_prize))
+
+datatable(big_prize_money, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+
+
+```
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE }
+
+ggplot(big_prize_money, aes(x = reorder(state_full,  avg_prize ), y =  avg_prize )) +
+  geom_bar(stat='identity',colour="white", fill = c("red")) +
+  geom_text(aes(x = state_full, y = 1, label = paste0("(",avg_prize,")",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'state', y = 'competitions Count', title = 'State wise Average prize money ' ) +
+  coord_flip() + 
+  theme_bw()
+
+
+```
+
+
+## Let's take a look of data in maps
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE}
+
+# Creating columns "region" , "value"
+big_prize_money$region<-big_prize_money$state_full
+
+# As library choroplethr throws an error, this sprit in made not to excute 
+#big_prize_money$value <- big_prize_money$avg_prize
+#choro = StateChoropleth$new(big_prize_money)
+#choro$title = "Big prize money at KCBS competitions"
+#choro$set_num_colors(1)
+#myPalette <- colorRampPalette(brewer.pal(9, "Reds"))
+#choro$ggplot_polygon = geom_polygon(aes(fill = value), color = NA)
+#choro$ggplot_scale = scale_fill_gradientn(name = "avg_prize", colours = myPalette(9))
+#choro$render()
+
+```
+
+
+
+```{r , message=FALSE, warning=FALSE, fig.align='center', echo = FALSE}
+
+
+library(RColorBrewer) # for colours gradent(visualization) 
+us.map  <- map_data('state')
+us.map$subregion <- NULL
+
+new <- inner_join(us.map , big_prize_money)
+
+g <- ggplot(new, aes(x=long, y=lat, group=group))
+g + geom_polygon(aes(fill=avg_prize)) + coord_map('gilbert') + ggtitle('State wise avgerage prize money')
+
+
+```
+
+But when it comes to Average prize money, **Arkansas and Nevada states** pays big.
+
+
+```{r include=FALSE}
+options(tibble.width = Inf)
+
+```
+
+
+###Lets see which team has Average best score in - brisket, chicken, pork, ribs respectively{.tabset}
+
+
+<center><img src="https://68.media.tumblr.com/160a08d8b0edbe0c32bb87268fa23d89/tumblr_os6ohcddqc1vj3zbeo1_500.gif"></center>
+
+
+#### **Brisket**
+
+```{r, result='asis'}
+
+brisket_results <- results_brisket %>%
+    group_by(team_name) %>% 
+    summarise(score = round(mean(score, na.rm = TRUE) , digits=4))%>%
+    arrange(desc(score))
+
+
+kable(head(brisket_results, 20))
+
+
+```
+
+ohh 180 on for 'BENT NAIL BBQ', 'Ghost River Smok-a-Holics' ,'The Dynamic Duo Bruce/Kyle' teams
+
+#### **Chicken**
+
+```{r, result='asis'}
+chicken_results <- results_chicken %>%
+    group_by(team_name) %>% 
+    summarise(score = round(mean(score, na.rm = TRUE) , digits=4))%>%
+    arrange(desc(score))
+kable(head(chicken_results, 20))
+
+``` 
+
+ohh 180 on 180 for 'Hackers n Hogs BBQ','R-W-Que','Smoke Central' teams
+
+
+#### **Pork**
+
+```{r, result='asis'}
+pork_results <- results_pork%>%
+    group_by(team_name) %>% 
+    summarise(score = round(mean(score, na.rm = TRUE) , digits=4))%>%
+    arrange(desc(score))
+
+kable(head(pork_results, 20))
+
+``` 
+
+ohh 180 on 180 for 'Goldie Locks & the Three Pigs','Rejino Barbecue','Slabba Dabba Que BBQ','Smokey Adams Bar-b-que' teams
+
+
+#### **Ribs**
+
+```{r, result='asis'}
+ribs_results <- results_ribs%>%
+    group_by(team_name) %>% 
+    summarise(score = round(mean(score, na.rm = TRUE) , digits=4))%>%
+    arrange(desc(score))
+kable(head(ribs_results, 20))
+
+
+``` 
+
+No team has 180 on 180 unlike brisket, chicken, pork . I think judges expects more from compititors
+
+
+
+
+
+```{r include=FALSE}
+options(tibble.width = Inf)
+```
+
+
+###Lets see what is teams best scores - brisket, chicken, pork, ribs respectively{.tabset}
+
+#### **Brisket**
+
+```{r, result='asis'}
+
+temp <- results_brisket %>%
+arrange(desc(score))
+
+
+datatable(temp, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+
+
+```
+
+many teams scored 180 on 180 
+
+
+#### **Chicken**
+
+```{r, result='asis'}
+temp <- results_chicken %>%
+arrange(desc(score))
+
+datatable(temp, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+
+
+``` 
+
+many teams scored 180 on 180 
+
+
+#### **Pork**
+
+```{r, result='asis'}
+temp <- results_pork %>%
+arrange(desc(score))
+
+datatable(temp, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+
+``` 
+
+
+#### **Ribs**
+
+```{r, result='asis'}
+temp <- results_ribs %>%
+arrange(desc(score))
+
+datatable(temp, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+
+``` 
+
+many teams scored 180 on 180 
+
+
+##When do competition happens !!{#Whendocompetitionhappens}
+
+```{r, message=FALSE, warning=FALSE}
+
+# Extracting day/month/year from time stamp  
+
+contest$date <- as.POSIXct(strptime(contest$date, format = "%Y-%m-%d"))
+contest$day <- as.integer(format(contest$date, "%d")) # day
+contest$month<- as.factor(format(contest$date, "%m")) # month
+contest$year <- as.integer(format(contest$date, "%Y")) # year
+
+```
+
+#Lets see on which day competition happen more
+
+```{r, message=FALSE, warning=FALSE}
+contest %>%
+    group_by(day)%>%
+    summarise(n = n())%>%
+    ggplot(aes(x =day, y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) 
+
+```
+
+I dont see any relation with day to competition 
+
+
+
+#Lets see on which month competition happen more
+
+```{r, message=FALSE, warning=FALSE}
+
+contest %>%
+    group_by(month)%>%
+    summarise(n = n())%>%
+    ggplot(aes(x = month, y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) 
+
+```
+
+Most of competition happens between **April - October** , most much in **November - March** , **September** is highest
+
+
+#Lets see on which year competition happen more
+
+```{r, message=FALSE, warning=FALSE}
+
+contest %>%
+    group_by(year)%>%
+    summarise(n = n())%>%
+    ggplot(aes(x = year, y =  n )) +
+    geom_bar(stat='identity',colour="white", fill = c("red")) 
+
+```
+
+I dont see any relation with year to competition, 2013 is low because of data.
+
+
+
+
+
+
+
+
+```{r, message=FALSE, warning=FALSE}
+#combining results_brisket,results_chicken,results_pork,results_ribs.
+
+combined_result <- rbind(results_brisket,results_chicken,results_pork,results_ribs)
+
+
+Total_score<-combined_result %>% 
+  group_by(contest_key, team_name) %>% 
+  summarise(tscore =sum(score))  %>% 
+  data.frame() %>%
+  arrange(contest_key, desc(tscore))
+  
+datatable(Total_score, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+
+```
+
+
+##Number of team participated in contest.{#Numberofteam}
+```{r, message=FALSE, warning=FALSE}
+participants <- Total_score %>%
+  group_by(contest_key)%>%
+  summarise(No_of_teams = n())
+
+datatable(participants, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+rm(participants)
+gc()
+
+```
+
+## Lets see Number of apperence by a team in contest
+
+```{r, message=FALSE, warning=FALSE}
+
+number_of_apperance <- Total_score %>%
+  group_by(team_name)%>%
+  summarise(appearances = n())%>%
+arrange(desc(appearances))
+datatable(number_of_apperance, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+```
+
+## Which team is over all best team 
+
+```{r, message=FALSE, warning=FALSE}
+avg_total_team_score <- Total_score %>%
+  group_by(team_name)%>%
+  summarise(appearances = n(), avg_total_score = mean(tscore))%>%
+  arrange(desc(avg_total_score))
+datatable(avg_total_team_score, class="table-condensed", style="bootstrap", options = list(dom = 'tp'))
+```
+
+Looking total score out off 800, How Yammmmi food that one should have tasted !!!
+
+
+#Want to participate in KCBS Barbeque Competitions??{#WordClould} 
+#Looking for clever team name!! 
+#Lets lookin Word clould.
+
+```{r, message=FALSE, warning=FALSE}
+library(tm)
+library(wordcloud)
+makeWordCloud <- function(documents) {
+  corpus = Corpus(VectorSource(tolower(documents)))
+  corpus = tm_map(corpus, removePunctuation)
+  corpus = tm_map(corpus, removeWords, stopwords("english"))
+  
+  frequencies = DocumentTermMatrix(corpus)
+  word_frequencies = as.data.frame(as.matrix(frequencies))
+  
+  words <- colnames(word_frequencies)
+  freq <- colSums(word_frequencies)
+  wordcloud(words, freq,
+            min.freq=sort(freq, decreasing=TRUE)[[100]],
+            colors=brewer.pal(8, "Dark2"),
+            random.color=TRUE) 
+}  
+
+
+
+top_score<-Total_score %>%
+  group_by(contest_key, team_name) %>%
+  filter(tscore >600)
+  
+makeWordCloud(top_score[["team_name"]][1:200])
+
+
+```
+
+
+
+#**Summary**{#Summary} 
+
+1. Most of the Compitiotions are State championship
+2. More then Half of the championship are not standard, i mean this competition include extra categories like dessert and these are considered.
+3. With the name KCBS Compititions happens more in missouri, kansas states. Which is centeral and West-Cental USA.
+4. But when it comes to Average prize money, Arkansas and Nevada states pays big.
+5. Most of competition happens between **April - October** , not much in **November- March** ,highest in  **September** 
+6. categories wise best teams
+
+**brisket**   **a.** BENT NAIL BBQ               **b.** Ghost River Smok-a-Holics     **c.** The Dynamic Duo Bruce/Kyle
+
+**chicken**   **a.** Hackers n Hogs BBQ          **b.** R-W-Que                        **c.** Smoke Central
+
+**pork**      **a.** Goldie Locks & the Three Pigs **b.** Rejino Barbecue            **c.** Slabba Dabba Que BBQ       **d.** Smokey Adams Bar-b-que
+
+**ribs**      **a.** BEES KNEES                  **b.**  Fat Texan
+	
+7. Overall best team in four categories: chicken, pork ribs, pork and brisket.
+
+
+**a.** KISS MY RACK   **b.** HAMMERHEAD USA BBQ   **c.** LAZY 2 BBQ
+
+8. Most of the teams have **'BBQ'** word in there team name
+
+#Thanks for reading. If you have any feedback, I'd love to hear! 
+#Please like the kernel. Your likes are my motivation. ;)
+
+
+
+
+
+
+
+

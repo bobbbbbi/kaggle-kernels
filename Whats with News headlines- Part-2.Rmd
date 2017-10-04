@@ -1,0 +1,270 @@
+---
+title: "What is with News headlines ? - Part-2"
+author: "Hitesh Palamada"
+date: "8 August 2017"
+output: html_document
+---
+Headlines make a huge difference in how readers understand articles,especially if they’re voracious speed-readers.
+This headlines want lots of people to read article. 
+The point is to get the attention of the reader and draw him into the story.
+
+##The Mind Is Like a Magnet 
+
+This kernel is continuation of "What is with News headlines" [here](https://www.kaggle.com/hiteshp/what-is-with-news-headlines/notebook). 
+
+
+Please do look, its intresting!!
+
+
+```{r, message=FALSE, warning=FALSE}
+# Importing Library
+
+library('syuzhet') #for sentiments analysis
+library(readr)
+library(dplyr)
+library(tidyverse)
+
+```
+
+##Import data set
+```{r, message=FALSE, warning=FALSE}
+abcnews <- read_csv("../input/abcnews-date-text.csv")
+
+```
+
+## Sentiment Analysis
+
+```{r, message=FALSE, warning=FALSE}
+
+#Getting year column from publish_date
+abcnews$year<-substr(abcnews$publish_date, start = 1, stop = 4)
+
+
+```
+
+###Lets see last 10 year wise Abc News headlines sentiment analysis
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE }
+
+
+#2007
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2007))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2007<-td_new[1:10,]
+
+td2007$year<- 2007
+
+#2008
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2008))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2008<-td_new[1:10,]
+
+td2008$year<- 2008
+
+#2009
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2009))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2009<-td_new[1:10,]
+
+td2009$year<- 2009
+
+
+#2010
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2010))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2010<-td_new[1:10,]
+
+td2010$year<- 2010
+
+#2011
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2011))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2011<-td_new[1:10,]
+
+td2011$year<- 2011
+
+
+#2012
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2012))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2012<-td_new[1:10,]
+
+td2012$year<- 2012
+
+#2013
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2013))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2013<-td_new[1:10,]
+
+td2013$year<- 2013
+
+#2014
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2014))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2014<-td_new[1:10,]
+
+td2014$year<- 2014
+
+#2015
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2015))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2015<-td_new[1:10,]
+
+td2015$year<- 2015
+
+#2016
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2016))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2016<-td_new[1:10,]
+
+td2016$year<- 2016
+
+#2017
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2017))
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:5000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td2017<-td_new[1:10,]
+
+td2017$year<- 2017
+
+df <- rbind(td2007,td2008,td2009,td2010,td2011,td2012,td2013,td2014,td2015,td2016,td2017)
+
+df %>% 
+    ggplot(aes(x=as.integer(year), y=count)) +
+    geom_line(color='red', stat='identity') + 
+    geom_point(color='red', size=2) + 
+    scale_x_continuous(breaks=seq(1,12,1)) + 
+    facet_wrap(~  sentiment) +
+    labs(x='year', title='change of sentiments with year')
+
+
+```
+
+
+
+
+
+###That's all for now. Thanks for reading. If you have any feedback, I'd love to hear! I appreciate all the feedback.
+### Do visit another intresting kernal "What is with News headlines" [here](https://www.kaggle.com/hiteshp/what-is-with-news-headlines/notebook) and 
+### Please like the kernel, Your likes are my motivation.  :)
+

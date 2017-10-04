@@ -1,0 +1,251 @@
+---
+title: "What is with News headlines ? - Text, Sentimental Analysis"
+author: "Hitesh Palamada"
+date: "8 August 2017"
+output: html_document
+---
+Headlines make a huge difference in how readers understand articles,especially if they’re voracious speed-readers.
+This headlines want lots of people to read article. 
+The point is to get the attention of the reader and draw him into the story.
+
+##The Mind Is Like a Magnet 
+Lets see how sentiments behind the Headlines makes us to read them.
+
+
+```{r, message=FALSE, warning=FALSE}
+# Importing Library
+
+library('syuzhet') #for sentiments analysis
+library(readr)
+library(dplyr)
+library(tidyverse)
+
+```
+
+##Import data set
+```{r, message=FALSE, warning=FALSE}
+abcnews <- read_csv("../input/abcnews-date-text.csv")
+
+```
+
+## Sentiment Analysis
+
+```{r, message=FALSE, warning=FALSE}
+
+#Getting year column from publish_date
+abcnews$year<-substr(abcnews$publish_date, start = 1, stop = 4)
+
+head(abcnews)
+dim(abcnews)
+
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == c(2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017))
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+
+td_new <- data.frame(rowSums(td[2:69179]))     
+# Selecting only 69179 columns as kaggle throws error message with all columns selected
+
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td_new2<-td_new[1:10,]
+
+#Vizualisation
+library("ggplot2")
+
+
+qplot(sentiment, data=td_new2, weight=count, geom="bar",fill=sentiment)+ggtitle("Abc News headlines sentiment analysis")
+
+```
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE}
+
+
+bp<- ggplot(td_new2, aes(x=sentiment, y=count, fill=td_new2$sentiment))+
+geom_bar(width = 1, stat = "identity")
+bp+ coord_polar("x", start=0) + theme(legend.position="none")+labs( x = "", y = "")+theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12,face="bold"))
+
+```
+
+###Our brains make sense of the universe by seeing patterns in things. Things that don't fit the pattern are what becomes important.
+###conclusion : To grab on attention of readers, most News Headlines have sentiments of Negative and fear.
+
+###From Rohk request of ploting sentiment changes with year, i have created another kernal-" What is with News headlines Part-2" [Click HERE](https://www.kaggle.com/hiteshp/whats-with-news-headlines-part-2/notebook).
+
+
+```{r include=FALSE}
+options(tibble.width = Inf)
+```
+
+
+
+###Lets see year wise Abc News headlines sentiment analysis{.tabset}
+
+#### 2003 
+
+```{r, result='asis', echo = FALSE}
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == 2003)
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:7000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td_new2<-td_new[1:10,]
+
+qplot(sentiment, data=td_new2, weight=count, geom="bar",fill=sentiment)+ggtitle("Abc News headlines sentiment analysis for 2003")
+
+
+bp<- ggplot(td_new2, aes(x=sentiment, y=count, fill=td_new2$sentiment))+
+geom_bar(width = 1, stat = "identity")
+bp+ coord_polar("x", start=0) + theme(legend.position="none")+labs( x = "", y = "")+theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12,face="bold"))
+
+ 
+```
+
+#### 2004
+
+```{r, result='asis',  echo = FALSE}
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == 2004)
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:7000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td_new2<-td_new[1:10,]
+
+qplot(sentiment, data=td_new2, weight=count, geom="bar",fill=sentiment)+ggtitle("Abc News headlines sentiment analysis for 2004")
+
+
+bp<- ggplot(td_new2, aes(x=sentiment, y=count, fill=td_new2$sentiment))+
+geom_bar(width = 1, stat = "identity")
+bp+ coord_polar("x", start=0) + theme(legend.position="none")+labs( x = "", y = "")+theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12,face="bold"))
+        
+```
+
+#### 2005
+
+```{r, result='asis', echo = FALSE}
+abcnews1 <- abcnews %>%
+select(year, headline_text) %>%
+ filter(year == 2005)
+
+d<-get_nrc_sentiment(abcnews1$headline_text)
+td<-data.frame(t(d))
+
+td_new <- data.frame(rowSums(td[2:7000]))     
+
+#Transformation and  cleaning
+names(td_new)[1] <- "count"
+td_new <- cbind("sentiment" = rownames(td_new), td_new)
+rownames(td_new) <- NULL
+td_new2<-td_new[1:10,]
+
+
+qplot(sentiment, data=td_new2, weight=count, geom="bar",fill=sentiment)+ggtitle("Abc News headlines sentiment analysis for 2005")
+
+
+bp<- ggplot(td_new2, aes(x=sentiment, y=count, fill=td_new2$sentiment))+
+geom_bar(width = 1, stat = "identity")
+bp+ coord_polar("x", start=0) + theme(legend.position="none")+labs( x = "", y = "")+theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12,face="bold"))
+        
+ 
+```
+
+
+
+
+
+##Lets lookin to Word clould of Abc News Headlines
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tm)
+library(wordcloud)
+makeWordCloud <- function(documents) {
+  corpus = Corpus(VectorSource(tolower(documents)))
+  corpus = tm_map(corpus, removePunctuation)
+  corpus = tm_map(corpus, removeWords, stopwords("english"))
+  
+  frequencies = DocumentTermMatrix(corpus)
+  word_frequencies = as.data.frame(as.matrix(frequencies))
+  
+  words <- colnames(word_frequencies)
+  freq <- colSums(word_frequencies)
+  wordcloud(words, freq,
+            min.freq=sort(freq, decreasing=TRUE)[[100]],
+            colors=brewer.pal(8, "Dark2"),
+            random.color=TRUE) 
+}  
+
+makeWordCloud(abcnews[["headline_text"]][1:2000])
+
+```
+
+
+####Hmmm, Colourfull
+####Lets lookin to most frequently words used 
+
+```{r, message=FALSE, warning=FALSE}
+library(tidytext)
+
+title_words <- abcnews %>%
+   select(publish_date, headline_text) %>%
+    unnest_tokens(Word , headline_text)
+
+title_word_counts <- title_words %>%
+    anti_join(stop_words, c(Word = "word")) %>%
+    count(Word, sort = TRUE)
+
+title_word_counts %>%
+    head(20) %>%
+    mutate(Word = reorder(Word, n)) %>%
+    ggplot(aes(Word, n)) +
+    geom_bar(stat = "identity") +
+    ylab("Number of appearances in R question titles") +
+    coord_flip()
+
+
+```
+
+
+
+#Most of Headlines are about  Police, Court, council, govt, Iraq, war  and water, rain, fire, death.
+
+
+
+
+
+
+
+###That's all for now. Thanks for reading. If you have any feedback, I'd love to hear! I appreciate all the feedback.
+###Do visit another intresting kernel “What is with News headlines Part-2” [CLICK HERE](https://www.kaggle.com/hiteshp/whats-with-news-headlines-part-2/notebook)
+###Please like the kernel. Your likes are my motivation. :)
+

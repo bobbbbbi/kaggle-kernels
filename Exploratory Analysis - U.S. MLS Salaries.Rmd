@@ -1,0 +1,544 @@
+---
+title: "Exploratory Analysis - U.S. MLS Salaries"
+author: "Hitesh Palamada"
+date: "18 July 2017"
+output: html_document
+---
+
+
+<center><img src="http://www.basketinside.com/wp-content/uploads/sites/41/2016/01/16/39/D-LeagueMap.jpg"></center>
+
+This is an exploratory analysis of the  U.S. Major League Soccer Salaries, which can be
+found [here](https://www.kaggle.com/crawford/us-major-league-soccer-salaries).
+ 
+In this script we'd be look at following things.
+ 
+* [1.Import data](#Importdata)
+* [2.Feature Engineering](#FeatureEngineering)
+* [3.Average salary by Club by year](#AveragesalarybyClubby year)
+* [3.Average annual salary by Club](#AverageannualsalarybyClub)
+* [4.Which club paid much as salary for there team palyers - CTC to Club](#CTCtoClub)
+* [5.Average salary by player position by year](#Averagesalarybyplayerpositionbyyear)
+* [6.Average franchise valuations by year](##Averagefranchise)
+* [7.Which players stayed for long time between 2007 -2017](#Whichplayersstayed)
+
+```{r, message=FALSE, warning=FALSE}
+# Importing Library
+library(readr)
+library(data.table)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+
+```
+##Import data{#Importdata}
+
+```{r, message=FALSE, warning=FALSE}
+
+mls_2007 <- read_csv("../input/mls-salaries-2007.csv")
+mls_2008 <- read_csv("../input/mls-salaries-2008.csv")
+mls_2009 <- read_csv("../input/mls-salaries-2009.csv")
+mls_2010 <- read_csv("../input/mls-salaries-2010.csv")
+mls_2011 <- read_csv("../input/mls-salaries-2011.csv")
+mls_2012 <- read_csv("../input/mls-salaries-2012.csv")
+mls_2013 <- read_csv("../input/mls-salaries-2013.csv")
+mls_2014 <- read_csv("../input/mls-salaries-2014.csv")
+mls_2015 <- read_csv("../input/mls-salaries-2015.csv")
+mls_2016 <- read_csv("../input/mls-salaries-2016.csv")
+mls_2017 <- read_csv("../input/mls-salaries-2017.csv")
+```
+
+##Feature Engineering{#FeatureEngineering}
+```{r, message=FALSE, warning=FALSE}
+# Adding year column to each year MLS player Salary table
+mls_2007$year <-2007
+mls_2008$year <-2008
+mls_2009$year <-2009
+mls_2010$year <-2010
+mls_2011$year <-2011
+mls_2012$year <-2012
+mls_2013$year <-2013
+mls_2014$year <-2014
+mls_2015$year <-2015
+mls_2016$year <-2016
+mls_2017$year <-2017
+
+
+# merging every (2007-2017) year MLS player Salary table
+mls<-rbind(mls_2007,mls_2008,mls_2009,mls_2010,mls_2011,mls_2012,mls_2013,mls_2014,mls_2015,mls_2016,mls_2017)
+
+# Creating a column adding Last name and First name
+mls$Name<-paste(mls$last_name,mls$first_name,sep=",")
+
+#Removing blank , NA values of Club
+mls<-mls[!(is.na(mls$club) | mls$club==""), ]     
+```
+
+##Average salary by Club by year{#AveragesalarybyClubbyyear}
+```{r, message=FALSE, warning=FALSE}
+temp<- mls %>%
+group_by(club, year) %>%
+summarize(Avg_Club_Salary = mean(base_salary)) 
+```
+```{r include=FALSE}
+options(tibble.width = Inf)
+```
+###Lets see year wise club average salary{.tabset}
+
+#### 2007 
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2007) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2008
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2008) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+``` 
+
+#### 2009 
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2009) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2010
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2010) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2011
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2011) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2012
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2012) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2013
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2013) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2014
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2014) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2015
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2015) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2016
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2016) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### 2017
+
+```{r, result='asis'}
+temp %>%
+  filter(year == 2017) %>%
+  ggplot(aes(x= club , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+```{r include=FALSE}
+options(tibble.width = Inf)
+```
+###Lets see club average salary year wise, I feel should gradually increase. Don't you?? {.tabset}
+
+#### CHI 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'CHI') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### ATL 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'ATL') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### CHV 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'CHV') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### CLB 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'CLB') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### COL 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'COL') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### DAL 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'DAL') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### DC 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'DC') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### HOU 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'HOU') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### KC 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'KC') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### LA 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'LA') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### LAFC 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'LAFC') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### MNUFC 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'MNUFC') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### CHI 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'CHI') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### MTL 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'MTL') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### NE 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'NE') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### NY 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'NY') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### NYCFC 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'NYCFC') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### NYRB 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'NYRB') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### CHI 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'CHI') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### ORL 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'ORL') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### PHI 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'PHI') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### POR 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'POR') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### RSL 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'RSL') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### SEA 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'SEA') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### SJ 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'SJ') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### TFC 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'TFC') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### TOR 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'TOR') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+#### VAN 
+
+```{r, result='asis'}
+temp %>%
+  filter(club == 'VAN') %>%
+  ggplot(aes(x= year , y= Avg_Club_Salary)) +
+  geom_bar(stat="identity",fill="red") 
+```
+
+## Which club paid much as salary for there team palyers- CTC to Club{#CTCtoClub}
+
+```{r, message=FALSE, warning=FALSE}
+
+library(treemap)
+
+options(repr.plot.width=13, repr.plot.height=8)
+
+temp1 <- mls %>%
+	group_by(club)%>%
+	summarize(Club_Salary_CTC = as.numeric(sum(base_salary))) 
+
+temp1$label<-paste(temp1$club,paste( "$" , temp1$Club_Salary_CTC) ,sep="\n")
+
+treemap( temp1,      index=c("label"),  
+        vSize = "Club_Salary_CTC",  
+        type="index", 
+        palette = "Set2", 
+        title="Cost to Club ",
+        fontsize.title = 14 
+        )
+
+```
+
+
+##Average salary by player position by year{#Averagesalarybyplayerpositionbyyear}
+
+```{r, message=FALSE, warning=FALSE}
+mls<-mls[!(is.na(mls$position) | mls$position==""), ]     
+# Considering 
+mls$position <- gsub("D-M", "D", mls$position )
+mls$position <- gsub("D-F", "D", mls$position )
+mls$position <- gsub("D/M", "D", mls$position )
+mls$position <- gsub("D/F", "D", mls$position )
+
+mls$position <- gsub("F-D", "F", mls$position )
+mls$position <- gsub("F-M", "F", mls$position )
+mls$position <- gsub("F/M", "F", mls$position )
+
+mls$position <- gsub("M-D", "M", mls$position )
+mls$position <- gsub("M-F", "M", mls$position )
+mls$position <- gsub("MF", "M", mls$position )
+mls$position <- gsub("M/F", "M", mls$position )
+mls$position <- gsub("M/D", "M", mls$position )
+
+temp1<- mls %>%
+group_by(position) %>%
+summarize(Avg_Club_Salary = mean(base_salary))  
+
+kable(temp1)
+
+```
+
+##Average franchise valuations by year{#Averagefranchise}
+
+```{r, message=FALSE, warning=FALSE}
+
+temp1<- mls %>%
+group_by(year) %>%
+summarize(Value = round(as.numeric(sum(base_salary)/1000000), digits=2)) 
+# Value in in million dollars . 
+kable(temp1)
+
+
+```
+
+
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE}
+ggplot(temp1, aes(x = year, y = Value)) +
+  geom_bar(stat='identity',colour="white", fill = c("red")) +
+  geom_text(aes(x = year, y = 1, label = paste0("(",Value,")",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'Year', y = 'Value in million dollar', title = 'CTC to Club') +
+  coord_flip() + 
+  theme_bw()
+
+```
+
+
+
+##Which players stayed for long time between 2007 -2017{#Whichplayersstayed}
+
+```{r, message=FALSE, warning=FALSE}
+temp3<- mls %>%
+group_by(Name) %>%
+summarize(Years_served = n())%>%
+arrange(desc(Years_served))
+
+kable(head(temp3, 30))
+
+```
+
+
+
+#That's all for now. Many things are in pipe line, Thanks for reading. If you have any feedback, I'd love to hear! 
+#Please like the kernel. Your likes are my motivation. ;)
+
+
