@@ -48,16 +48,22 @@
 
 
 **What is with News headlines-2**
+
+
 **tags-** data visualization, data manupulation, Sentimental analysis, text mining,eda.
 **kaggle link-** https://www.kaggle.com/hiteshp/what-is-with-news-headlines-2
 
 
-**Hidden Markov Model-Predicting Stock Market**
-**tags-** HMM
+**Share Market Study**
+
+
+**tags-** Share Market Study
 **kaggle link-** https://www.kaggle.com/hiteshp/money-money-share-market-study
 https://www.kaggle.com/hiteshp/money-money-share-market-study-2
 
 **Hidden Markov Model-Predicting Stock Market**
+
+
 **tags-** HMM
 **kaggle link-** https://www.kaggle.com/hiteshp/hidden-markov-model-predicting-stock-market/
 
