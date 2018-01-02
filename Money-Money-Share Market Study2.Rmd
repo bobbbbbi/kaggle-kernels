@@ -1,0 +1,477 @@
+---
+title: "Share Market Study"
+author: "Hitesh Palamada"
+date: "16 Nov 2017"
+output: 
+  html_document:
+    toc: TRUE
+    code_folding: hide
+   
+    
+---
+---
+
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+
+```
+
+<center><img src="http://www.chicagonow.com/hammervision/files/2013/12/the-wolf-of-wall-street-official-extended-trailer-0.jpg"></center>
+
+
+
+
+
+
+#Introduction 
+This is Dow Jones Industrial Average (DJIA) stock market movement analysis
+In this kernel we will be looking into **basic Technical Analysis of stock market movement**
+
+                                                                             
+                                                                             
+                                                                             
+**Upvote the kernel, if it is useful and you like.**
+
+
+
+#Import library, data set and bird eye view on dataset
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+library(ggplot2)
+library(TTR)
+library(dplyr)
+library(reshape2)
+library(gridExtra)
+
+
+#DJ data frame
+
+dj <- read.csv("../input/DJIA_table.csv")
+
+dj %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="Date",y="Day Closing Price")
+
+```
+
+
+This looks a **bull market**. (a market in which share prices are rising, encouraging buying)
+
+
+Whether to invest or sell out shares can be decided based on Technical studies
+
+Some of basic Technical studies are
+
+1.Bollinger bands
+
+2.Aroon and Aroon Oscillator
+
+3.Moving average
+
+4.Stochastic
+
+5.Relative Strength Index
+
+6.On Balance Volume (OBV)
+
+7.Chaikin Accumulation / Distribution
+
+8.Average Directional Index- Welles Wilder’s Directional Movement Index
+
+9.MACD - moving average convergence divergence (MACD)
+
+10.Zig Zag
+
+11.Commodity Channel Index
+
+
+
+Lets look in at each study
+
+**Note:This study is good approch intra day, share market runs mostly on market sentiments**
+
+
+Lets lookin at 3 months data for easy understanding
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+dj <- dj[1:100,]
+
+dj <- dj[rev(rownames(dj)),]  # arranging based on date
+
+```
+
+
+
+#Bollinger bands
+
+**Bollinger bands** are used to find market turning points, potential trading range breakouts, and trend exhaustion.
+
+More details can be found[here](https://technicianapp.com/resources/bollinger-bands/). 
+
+
+
+##Math behind
+
+An envelope based with width determined by standard deviations above and below a moving average.
+
+ Middle Band = N-period moving average
+Upper Band = N-period moving average + (N-period standard deviation of price x multiple)
+Lower Band = N-period moving average – (N-period standard deviation of price x multiple)
+Multiple = user defined number of deviations above and below middle band (typically 2.0)
+
+N-period = typically 20
+
+Standard Deviation =
+
+Calculate the average (mean) price for N periods
+Subtract each price over N periods from the average price over N periods
+Square each difference.
+Sum these squares
+Divide this sum by N
+Standard deviation = the square root of that number.
+
+
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+bb<- BBands(dj[c('Close')], sd=2.0)
+bb20 <-as.data.frame(bb)  #Converting into data frame 
+
+dataPlusBB = data.frame(dj,bb20)
+
+dataPlusBB <- dataPlusBB[20:100,]
+
+dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+geom_line(aes(y=up),col="purple")+
+geom_line(aes(y=dn),col="brown")+
+geom_line(aes(y=mavg),col="blue")+
+theme(axis.text.x = element_text(angle=90))
+
+```
+
+
+##Interpretation
+
+The key aspects are:
+
+**1.**Sharp moves tend to occur after the bands tighten to the average (volatility lessens). Volatility tends to cycle from high to low and back again so a period of unusual calm often leads to an explosive move one way or the other.
+
+**2.**A move outside the bands calls for a continuation of the trend, not an end to it. Often, the first push of a major move will carry prices outside the bands. This indicates strength in an up market and weakness in a down market.
+
+**3.**A sharp move outside the bands followed by an immediate retracement of that move is a sign of exhaustion.
+
+**4.**Bottoms (tops) made outside the bands followed by bottoms (tops) made inside the bands call for reversals in trends.
+
+**5.**The bands can help in diagnosing double tops and bottoms, especially when the second part of the top (bottom) is higher (lower) than the first and lower (higher) in relation to the bands.
+
+**6.**The average should give support (resistance) in bull (bear) markets.
+
+**7.**A move originating at one band tends to go to the other band in consolidating or ranging markets. This is useful for projecting price targets early on and provides revised targets as events unfold.
+ 
+
+
+
+
+
+
+#Aroon and Aroon Oscillator
+
+**Aroon and Aroon Oscillator** Used to identify the strength of a trend and especially when a trend is beginning.
+
+More details can be found[here](https://technicianapp.com/resources/aroon-and-aroon-oscillator/). 
+
+
+
+##Math behind
+
+Aroon Up = 100 x (n- Days Since n-day High)/n
+
+Aroon Down = 100 x (n – Days Since n-day Low)/n
+
+Aroon Oscillator = Aroon Up – Aroon Down
+
+
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+
+#aroon(HL, n = 20)
+
+ar <- aroon( dj[c('Close')], n=20)
+
+
+dataPlusBB = data.frame(dj,ar)
+
+dataPlusBB <- dataPlusBB[20:100,]
+
+options(repr.plot.width=6, repr.plot.height=4) 
+
+a<-dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="",y="Day Closing value")
+
+
+b<-dataPlusBB %>% ggplot(aes(x=Date,y=aroonUp,group=1))+
+geom_line(aes(y=aroonUp),col="purple")+
+geom_line(aes(y=aroonDn),col="brown")+
+geom_line(aes(y=oscillator),col="blue")+        
+theme(axis.text.x = element_text(angle=90))+
+labs(x="Date",y="Aroon value")
+
+grid.arrange(a,b,nrow=2,ncol=1)
+
+```
+
+##Interpretation
+
+The Aroon indicators fluctuate above/below a centerline (50) and are bound between 0 and 100. These three levels are important for interpretation. Basically, the bulls are in charge when Aroon Up is above 50 and Aroon Down is below 50. The bears are in charge when Aroon Up is below 50 and Aroon Down is above 50.
+
+A surge to 100 indicates that a trend may be emerging and it is usually confirmed when the companion (Up or Down) declines. For example, a move to 100 in Aroon Up combined with a decline in Aroon Down shows upside strength. Consistently high readings mean prices are regularly hitting new highs or new lows for the specified period. Conversely, consistently low readings indicate that prices are seldom hitting new highs or lows.
+
+Chande recommends the following signals:
+
+Aroon Up above 70 indicates a strong uptrend.
+
+Aroon Down above 70 indicates a strong downtrend.
+
+Aroon Up below 50 warns that the uptrend is weakening.
+
+Aroon Down below 50 signals that the downtrend is weakening.
+
+The two moving lower in close proximity indicates consolidation, with no clear trend.
+
+The Aroon Oscillator is a derivative of the indicator and provides a different way to view the results. It is constructed by subtracting Aroon Down from Aroon Up. The Aroon Oscillator oscillates between -100 and +100 with zero as the center line. It signals an uptrend if it is moving towards its upper limit and a downtrend when it is moving towards the lower limit. The closer the Aroon Oscillator value is to either extreme the stronger the trend is.
+
+A general bullish bias is present when the oscillator is positive and a bearish bias exists when negative. However, unlike other oscillators, divergences between indicator and price are not meaningful.
+
+Signals for the Aroon Oscillator:
+
+Above zero signals an uptrend.
+
+Below zero indicates a downtrend.
+
+The farther away Aroon Oscillator is from the zero line, the stronger the trend.
+
+
+
+#Simple Moving Average
+
+Moving averages are used to smooth out market volatility and identify changes in trend.
+
+
+
+More details can be found[here](https://technicianapp.com/resources/moving-average/). 
+
+##Math behind
+
+
+Simple Moving Average =	(P + P1 + … + P(n-1) ) /n
+
+
+Exponential Moving Average = (P + aP1 + a2P2 + … + a(n-1)     P(n-1) )  / (1 + a + a2   + …   + a(n-1))
+
+
+
+Where:   P =	current price
+P1 =	price 1 period ago
+P2 =	price 2 periods ago
+a =	smoothing constant 2/(n+1)
+n =	user-defined number of periods for the average
+
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+sma20 <- SMA(dj[c('Close')],n=20)
+sma50 <- SMA(dj[c('Close')],n=50)
+sma100 <- SMA(dj[c('Close')],n=100)
+
+dataPlusBB = data.frame(dj,sma20,sma50, sma100)
+
+dataPlusBB <- dataPlusBB[1:100,]
+
+dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+geom_line(aes(y=sma20),col="purple")+
+geom_line(aes(y=sma50),col="brown")+
+geom_line(aes(y=sma100),col="blue")+
+theme(axis.text.x = element_text(angle=90))
+
+
+```
+
+
+##Interpretation
+
+
+Typical analysis involves price crossovers with the average. It is a lagging indicator but can confirm that a change in trend has taken place. When coupled with a trend line or support/resistance violation, the signal becomes quite reliable. Averages give traders an idea of support and resistance areas but they should not be used alone to determine trade triggers. Overshoots of averages are common although using an envelope of the averages of highs and of lows can help mitigate this.
+
+The iShares 20+ year Treasury Bond ETF offers short-term analysis via the 10-day simple and exponential average. The latter reacts to market changes faster than the former and crossovers between the two can help confirm short-term trend changes.
+
+The 50-day average gives traders an idea of the intermediate-term trend and extreme movements of price away from the average can indicate overbought or oversold conditions Price crossovers indicate changes in the intermediate-term trend.
+
+
+
+
+#Stochastic
+
+Stochastics is used to identify market strength, overbought/oversold.
+
+More details can be found[here](https://technicianapp.com/resources/stochastics/). 
+
+##Math behind
+
+Calculates where price is within a recent range.
+
+Fast calculation (%K) uses raw value with a simple moving average
+Slow (smoothed) version (%D) uses the simple average with another simple average of the first
+Fast %K = (Current Price – Lowest Low) /  (Highest High – Lowest Low)
+
+Fast %D = 3-period simple moving average of Fast %K
+
+Slow %K = Fast %D
+
+Slow %D = 3-period simple moving average of Slow %K
+
+ 
+
+Lowest Low = lowest low for the past N-periods including current
+
+Highest High = highest high for the past N-periods including current
+
+
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+Stochastic<-stoch(dj[c('Close')], nFastK = 14, nFastD = 3, nSlowD = 3, bounded = TRUE,
+  smooth = 1)
+
+dataPlusBB = data.frame(dj,Stochastic)
+
+a<-dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="",y="Day closing value")
+
+
+b<-dataPlusBB %>% ggplot(aes(x=Date,y=fastK,group=1))+
+geom_line(aes(y=fastK),col="purple")+
+geom_line(aes(y=fastD),col="brown")+
+geom_line(aes(y=slowD),col="blue")+
+theme(axis.text.x = element_text(angle=90))+
+labs(x="Date",y="Stochastic value")
+
+grid.arrange(a,b,nrow=2,ncol=1)
+
+
+```
+
+##Interpretation
+
+Values above 80 or below 20 are potential market signals. Aside from smoothing out fluctuations, the moving average adds two other dimensions to the analysis. Crossovers between the two lines and divergences between the stochastic and the price trend, both within the overbought and oversold ranges, provide additional evidence of reversals in the market.
+
+The unsmoothed stochastic will tend to show many crossovers and therefore could show false signals to the inexperienced user of this technique. The smoothed version, often called the slow version, will show fewer crossover signals, but each one is more likely to catch true near-term market reversals. One caution would be that extreme readings in strongly trending markets could be continuation, not reversal, signals. This study is better suited to slower market conditions.
+
+
+
+
+
+#Relative Strength Index
+
+RSI (Relative Strength Index) is used to measure underlying strength of a market move.
+
+
+More details can be found[here](https://technicianapp.com/resources/rsi-relative-strength-index/). 
+
+##Math behind
+
+RSI = 100 – 100/(1 + RS)
+
+RS = Average of the up closes over n-periods
+
+Average of the down closes over n-periods
+
+ 
+
+The average of the “up closes” refers to the total changes higher over the past “n” periods (not the last “n” up-periods) divided by “n.” The average of “down closes” refers to the total changes lower over the same span.
+
+RSI values are smoothed in an exponential manner after the initial calculation whereby the averages of up closes and down closes are each divided by n-1 and the new period’s up or down close is added. The result is then divided by n.  As follows:
+
+Average up close = (previous average up close x (n-1) + current up close) / n.
+
+Average down close = (previous average down close x (n-1) + current down close) / n.
+
+
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+
+
+RSI<-RSI(dj[c('Close')], n = 14)
+Stochastic<-stoch(dj[c('Close')], nFastK = 14, nFastD = 3, nSlowD = 3, bounded = TRUE,
+  smooth = 1)
+
+dataPlusBB = data.frame(dj,RSI)
+
+dataPlusBB <- dataPlusBB[1:100,]
+
+
+a<-dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="",y="Day closing value")
+
+b<-dataPlusBB %>% ggplot(aes(x=Date,y=RSI,group=1))+
+geom_line(aes(y=RSI),col="purple")+
+theme(axis.text.x = element_text(angle=90))+
+labs(x="Date",y="RSI value")
+
+grid.arrange(a,b,nrow=2,ncol=1)
+
+
+
+
+```
+
+##Interpretation
+
+The RSI value itself ranges from 0 to 100 and support, resistance and trends can be found on the RSI plot. An RSI value above 80 indicates a possible overbought situation and a value below 20 indicates a possible oversold condition. This does not mean, however, that a market will immediately reverse once either of these levels is reached. It is more likely that the market will pause to consolidate, resulting in a more neutral RSI value.
+
+Relatively high RSIs (60-80) normally accompany a rising trend and relatively low RSIs (20-40) normally accompany a declining price trend. If price makes a higher high and RSI makes a lower high, the divergence between the two could signal bearish market reversals. Conversely, a lower low in price and higher low in RSI could signal a bullish market reversal.
+
+Please do look into continuation of this kernel [here](https://www.kaggle.com/hiteshp/money-money-share-market-study-2). 
+
+Where we be learning following Technical studies,
+
+1.On Balance Volume (OBV)
+
+2.Chaikin Accumulation / Distribution
+
+3.Average Directional Index- Welles Wilder’s Directional Movement Index
+
+4.MACD - moving average convergence divergence (MACD)
+
+5.Zig Zag
+
+6.Commodity Channel Index
+
+
+
+**Thanks for reading. If you have any feedback, I'd love to hear! .**
+**Please like the kernel. Your likes are my motivation. ;) **

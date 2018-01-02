@@ -1,0 +1,452 @@
+---
+title: "Share Market Study-2"
+author: "Hitesh Palamada"
+date: "16 Nov 2017"
+output: 
+  html_document:
+    toc: TRUE
+    code_folding: hide
+   
+    
+---
+---
+
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+
+```
+
+<center><img src="http://www.chicagonow.com/hammervision/files/2013/12/the-wolf-of-wall-street-official-extended-trailer-0.jpg"></center>
+
+
+
+
+
+
+
+
+
+This is continuation of Money-Money-Share Market Study [here](https://www.kaggle.com/hiteshp/money-money-share-market-study). 
+Please do read
+
+
+#Introduction 
+This is Dow Jones Industrial Average (DJIA) stock market movement analysis
+In this kernel we will be looking into basic Technical Analysis of stock market movement
+
+                                                                             
+                                                                             
+                                                                             
+**Upvote the kernel, if it is useful and you like.**
+
+
+
+#Import library, data set and bird eye view on dataset.
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+library(ggplot2)
+library(TTR)
+library(dplyr)
+library(reshape2)
+library(gridExtra)
+
+
+#DJ data frame
+
+dj <- read.csv("../input/DJIA_table.csv")
+
+dj %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="Date",y="Day Closing Price")
+
+```
+
+
+This looks a **bull market**. (a market in which share prices are rising, encouraging buying)
+
+
+Whether to invest or sell out shares can be decided based on Technical studies.
+
+In this kernel we will be lookin at following basic Technical studies.
+
+
+1.On Balance Volume (OBV)
+
+2.Chaikin Accumulation / Distribution
+
+3.Average Directional Index- Welles Wilder’s Directional Movement Index
+
+4.MACD - moving average convergence divergence (MACD)
+
+5.Zig Zag
+
+6.Commodity Channel Index
+
+
+
+Lets look in at each study,
+
+**Note:This study is good approch intra day, share market runs mostly on market sentiments**
+
+
+Lets lookin at 3 months data for easy understanding
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+
+dj <- dj[1:100,]
+
+dj <- dj[rev(rownames(dj)),]  # arranging based on date
+
+```
+
+#On Balance Volume (OBV)	
+Cumulative volume (or on-balance volume) is used to confirm market moves based on buying and selling pressure.
+
+More details can be found[here](https://technicianapp.com/resources/cumulative-on-balance-volume/). 
+
+
+##Math behind
+
+A running total of volume on up-periods minus volume on down periods. Periods with no change have no effect.
+
+∑volume *  (direction of price change )
+
+Value will change depending on span chosen but plot will look the same
+
+##Theory
+
+On-balance volume is also known as Cumulative Volume. Supply and demand can be measured by the volume taking place on price increases (up periods) and the volume taking place on price decreases (down periods). Over time, cumulative volume and price should rise and fall in tandem.
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+
+
+OBV <-  OBV(dj[c('Close')], dj$Volume)
+
+
+
+dataPlusBB = data.frame(dj,OBV)
+
+dataPlusBB <- dataPlusBB[1:100,]
+
+
+head(dataPlusBB)
+
+
+a<-dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="",y="Day closing value")
+
+
+b<-dataPlusBB %>% ggplot(aes(x=Date,y=DIp,group=1))+
+geom_line(aes(y=OBV),col="red")+
+theme(axis.text.x = element_text(angle=90))
+
+
+grid.arrange(a,b,nrow=2,ncol=1)
+
+
+
+
+```
+
+##Interpretation
+On its own, cumulative volume does not provide many clues for predicting prices, but used with price chart, its usefulness becomes apparent. Divergence between the two may signal trading opportunities.
+
+
+
+#Chaikin Accumulation / Distribution 	
+
+Used to measure demand and supply for a single instrument
+
+More details can be found[here](https://technicianapp.com/resources/chaikin-money-flow/).
+
+##Math behind
+
+Find the Money Flow Multiplier = ((Close – Low) – (High – Close)) /  (High – Low)
+
+Calculate Money Flow Volume = (Money Flow Multiplier)  x  Volume
+
+Calculate the CMF = (N-Period Sum of Money Flow Volume)  /  (N-Period Sum of Volume)
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+
+chaikinAD <-  chaikinAD(dj[c(  "High","Low","Close")], dj[c( "Volume")]   )
+
+
+
+dataPlusBB = data.frame(dj,chaikinAD)
+
+dataPlusBB <- dataPlusBB[1:100,]
+
+
+
+head(dataPlusBB)
+
+a<-dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="",y="Day closing value")
+
+b<-dataPlusBB %>% ggplot(aes(x=Date,y=chaikinAD,group=1))+
+geom_line(aes(y=chaikinAD),col="purple")+
+theme(axis.text.x = element_text(angle=90))+
+labs(x="Date",y="chaikinAD value")
+
+grid.arrange(a,b,nrow=2,ncol=1)
+
+
+```
+
+##Interpretation
+
+The simplest way to use CMF is to identify buying pressure when the indicator is above zero and selling pressure when it is below zero. The higher it gets the stronger the buying pressure. And the lower it gets (more negative) the stronger the selling pressure.
+
+When CMF crosses the zero Line it can alert the user that a trend reversal is possible.
+
+To reduce false signals, many users expand the threshold for these signals buy requiring the indicator to cross above 0.05 for a buy and below -0.05 for a sell. However, it is best to look back at the particular securities history to fine tune these levels.
+
+Unlike traditional money flow indicators, divergences between Chaikin Money Flow and price are not as effective. For example, even if the indicator set a lower peak in positive territory it is still in positive territory. Price momentum may slow down but price direction does not necessarily follow. Users can take a lower high as a warning but each peak should be taken on its own.
+
+Chaikin Money Flow does have a problem handling gaps. For example, if a stock gaps up but closes in the bottom of its range the Money Flow Volume value for that period would be negative and the CMF calculation would fall. This despite the rather bullish price jump.
+
+There is also a problem with volatile securities. Even if there are valid up and down trends in place, CMF can provide many whipsaws if price action within the trend is choppy. Therefore, it pays to look at the security’s history to see if this has been the case. If it has, then it may not be a good candidate for CMF analysis.
+
+
+#Average Directional Index- Welles Wilder's Directional Movement Index
+
+ADX/DMS stands for Average Directional Index and Directional Movement System.  It can be used to identify the direction and strength of a trend.
+
+More details can be found[here](https://technicianapp.com/resources/adxdms/).
+
+##Math behind
+
+1) Directional Movement (DM) is defined as the largest part of the current period’s price range that lies outside the previous period’s price range.
+
+PDM = current high minus the previous high (called plus DM)
+MDM = current low minus the previous low (called minus DM)
+If PDM > MDM then MDM is set to zero
+If MDM > PDM then PDM is set to zero
+If current range lies within or is equal to the previous range then set both PDM and MDM to zero
+
+2) Calculate the value of the Plus and Minus Directional Indicators:
+
+PDI(n) = (PDM(n) * 100 ) /ATR(n)                            MDI(n)   = ( MDM(n) * 100) /ATR(n)
+
+                                                                    
+
+Where:  n = Number of periods
+
+ATR =  Average True Range
+
+ 
+
+3) Calculate the absolute value of the Directional Movement Index (DMI):
+
+DMI =  (PDI – MDI) /(PDI + MDI)
+
+
+
+4) Calculate the Average Directional Movement (DMIA a.k.a. ADX):  DMIA(n) = Simple Moving Average of DMI
+
+
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+
+ADX<-ADX(dj[c("High","Low","Close")], n = 14)
+
+
+dataPlusBB = data.frame(dj,ADX)
+
+dataPlusBB <- dataPlusBB[1:100,]
+
+
+head(dataPlusBB)
+
+a<-dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="",y="Day closing value")
+
+
+b<-dataPlusBB %>% ggplot(aes(x=Date,y=DIp,group=1))+
+geom_line(aes(y=DIp),col="red")+
+geom_line(aes(y=DIn),col="purple")+
+geom_line(aes(y=DX),col="brown")+
+geom_line(aes(y=ADX),col="blue")+
+theme(axis.text.x = element_text(angle=90))
+
+
+grid.arrange(a,b,nrow=2,ncol=1)
+
+
+```
+
+##Interpretation
+
+This system can be used as a filter for more traditional studies. If ADX is above 25-30, a trend following system can be used. If it is below 25-30 then an alternate should be used. Buy when +DM crosses above -DM and sell when the reverse occurs. When PDM is greater than MDM it means days when the trend was up outweigh the days when the trend was down (over the past “n” days). The greater the difference, the stronger the trend
+
+High and rising ADX indicates a strong trend but not direction. +DM and –DM, not to mention visual inspection, tells the trader market direction. Low and falling ADX suggests whatever trend was in place has or will soon fail.
+
+
+#MACD  - moving average convergence divergence (MACD) 
+
+MACD stands for Moving Average Convergence-Divergence. It is used to identify overbought and oversold conditions.
+
+More details can be found[here](https://technicianapp.com/resources/chaikin-money-flow/).
+
+##Math behind
+
+MACD line – short moving average minus short moving average
+
+Signal line – a moving average of the MACD line
+
+Histogram – same as MACD line but in a different visual format
+
+ 
+
+Averages are usually based on the close and are exponentially smoothed.
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+MACD<-MACD(dj[c('Close')], nFast = 12, nSlow = 26, nSig = 9, maType="EMA" )
+
+dataPlusBB = data.frame(dj,MACD)
+
+head(dataPlusBB)
+
+
+a<-dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+theme(axis.title.x = element_text(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+labs(x="",y="Day closing value")
+
+
+
+
+b<-dataPlusBB %>% ggplot(aes(x=Date,y=DIp,group=1))+
+geom_line(aes(y=macd),col="red")+
+geom_line(aes(y=signal),col="purple")+
+theme(axis.text.x = element_text(angle=90))
+
+
+grid.arrange(a,b,nrow=2,ncol=1)
+
+
+
+```
+
+##Interpretation
+
+As a rule, the market is bullish if the MACD line is rising and is above the Signal Line. It is bearish if the MACD line is falling and is below the Signal Line. Buy signals are given when the MACD crosses above the signal; similar to price crossing above a moving average. Sell signals are given when the MACD crosses below the signal.
+
+Other analysis includes divergence with price action. While extreme values of the MACD line reveal overbought and oversold conditions, since MACD is not indexed (constrained to move between 0 and 100), extreme values must be relative to its own history.
+
+Finally, crossovers of the zero line are also useful in determining trend direction.
+
+
+
+#Zig Zag 
+
+
+The ZigZag feature on SharpCharts is not an indicator per se, but rather a means to filter out smaller price movements. A ZigZag set at 10% would ignore all price movements less than 10%. Only price movements greater than 10% would be shown. Filtering out smaller movements gives chartists the ability to see the forest instead of just trees. It is important to remember that the ZigZag feature has no predictive power because it draws lines base on hindsight. Any predictive power will come from applications such as Elliott Wave, price pattern analysis or indicators. Chartists can also use the ZigZag with retracements feature to identify Fibonacci retracements and projections.
+
+More details can be found[here](http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:zigzag).
+
+The ZigZag is based on the chart “type.” Line and dot charts, which are based on the close, will show the ZigZag based on closing prices. High-Low-Close bars (HLC), Open-High-Low-Close (OHLC) bars and candlesticks, which show the period's high-low range, will show the ZigZag based on this high-low range. A ZigZag based on the high-low range is more likely to change course than a ZigZag based on the close because the high-low range will be much larger and produce bigger swings.
+
+##Math behind
+
+The parameters box allows chartists to set the sensitivity of the ZigZag feature. A ZigZag with 5 in the parameter box will filter out all movements less than 5%. A ZigZag(10) will filter out movements less than 10%. If a stock traded from a reaction low of 100 to a high of 109 (+9%), there would not be a line because the move was less than 10%. If the stock advanced from a low of 100 to a high of 110 (+10%), there would be a line from 100 to 110. If the stock continued on to 112, this line would extend to 112 (100 to 112). The ZigZag would not reverse until the stock declined 10% or more from its high. From a high of 112, a stock would have to decline 11.2 points (or to a low of 100.8) to warrant another line. The chart below shows a QQQQ line chart with a 7% ZigZag. The early June bounce was ignored because it was less than 7% (black arrow). The two pullbacks in July were ignored because they were much less than 7% (red arrows).
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+
+
+ZigZag<-ZigZag(dj[c( 'High','Close')], change = 10, percent = TRUE, retrace = FALSE,
+  lastExtreme = TRUE)
+
+
+
+dataPlusBB = data.frame(dj,ZigZag)
+
+dataPlusBB <- dataPlusBB[1:100,]
+
+head(dataPlusBB)
+
+
+dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+geom_line(aes(y=ZigZag),col="purple")+
+theme(axis.text.x = element_text(angle=90))
+
+
+```
+
+#Commodity Channel Index
+
+The Commodity Channel Index (CCI) is used to time buys and sells based on overbought and oversold conditions.
+
+More details can be found[here](https://technicianapp.com/resources/chaikin-money-flow/).
+
+
+##Math behind
+
+CCI = ( Typical Price (TP) – (n-period simple moving average of TP)  ) / (0.015 * Mean Deviation)
+
+Typical Price = (high + low + close) / 3
+
+Mean Deviation =( ∑(absolute value of difference of TP and its N-pd simple moving average) ) / N
+
+
+```{r,  message=FALSE, warning=FALSE, results='hide'}
+
+cci <- CCI(dj[c( 'High','Low','Close')])  # can be changed
+
+
+
+
+
+dataPlusBB = data.frame(dj,cci)
+
+dataPlusBB <- dataPlusBB[1:100,]
+
+head(dataPlusBB)
+
+
+dataPlusBB %>% ggplot(aes(x=Date,y=Close,group=1))+
+geom_line(aes(y=Close),col="red")+
+geom_line(aes(y=cci),col="purple")+
+theme(axis.text.x = element_text(angle=90))
+
+
+```
+
+
+##Interpretation
+
+Most of the random fluctuations of the CCI should fall within a channel between negative 100% and positive 100%. The rules of trading are to buy long when CCI rises above +100%, and sell that position when CCI falls below +100%. Conversely, sell short when CCI falls below -100% then cover shorts when CCI rises above -100%. The idea is to buy strength and sell when that strength wanes.
+
+
+
+
+**Thanks for reading. If you have any feedback, I'd love to hear! .**
+**Please like the kernel. Your likes are my motivation. ;) **
